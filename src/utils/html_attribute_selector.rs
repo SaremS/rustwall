@@ -1,11 +1,11 @@
-use std::fmt;
 use html_editor::operation::Selector;
+use serde::de::{self, MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer};
-use serde::de::{self, Visitor, SeqAccess, MapAccess};
+use std::fmt;
 
 pub struct HtmlAttributeSelector {
     html_selector: Selector,
-    attribute_name: String
+    attribute_name: String,
 }
 
 impl<'de> Deserialize<'de> for HtmlAttributeSelector {
@@ -27,11 +27,11 @@ impl<'de> Deserialize<'de> for HtmlAttributeSelector {
                 E: de::Error,
             {
                 let parts: Vec<&str> = value.splitn(2, ":::").collect();
-                
+
                 let html_selector = Selector::from(parts[0]);
                 let attribute_name = parts[1].to_string();
 
-                return Ok(HtmlAttributeSelector{
+                return Ok(HtmlAttributeSelector {
                     html_selector,
                     attribute_name,
                 });
@@ -41,8 +41,6 @@ impl<'de> Deserialize<'de> for HtmlAttributeSelector {
         deserializer.deserialize_string(HtmlAttributeSelectorVisitor)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

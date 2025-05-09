@@ -34,7 +34,7 @@ mod tests {
     fn test_price_source_hard() {
         let config_yml = r#"
         !Hard $1.25
-        "#; 
+        "#;
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
     }
@@ -43,9 +43,8 @@ mod tests {
     fn test_price_from_html_selector() {
         let config_yml = r#"
         !FromHtmlSelector .paywall
-        "#; 
+        "#;
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
     }*/
-
 }
