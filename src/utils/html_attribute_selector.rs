@@ -136,7 +136,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_attribute() {
+    fn test_get_attribute_success() {
         let config_yml = r#"
         div#test:::data-test
         "#;
@@ -149,5 +149,62 @@ mod tests {
         let result: u16 = selector.get_attribute::<u16>(&node).unwrap();
 
         assert_eq!(result, 123);
+    }
+    
+    #[test]
+    fn test_get_attribute_element_not_found() {
+        let config_yml = r#"
+        div#test:::data-test
+        "#;
+
+        let selector: HtmlAttributeSelector= serde_yml::from_str(config_yml).unwrap();
+        let document = parse("<html><head></head><body><div id=\"test123\" data-test=\"123\"/></body></html>");
+
+        let node = document.unwrap()[0].clone();
+
+        let result = selector.get_attribute::<u16>(&node);
+
+        match result {
+            Err(HtmlAttributeSelectorError::ElementNotFound) => {},
+            _ => panic!()
+        }
+    }
+
+    #[test]
+    fn test_get_attribute_attribute_not_found() {
+        let config_yml = r#"
+        div#test:::data-test
+        "#;
+
+        let selector: HtmlAttributeSelector= serde_yml::from_str(config_yml).unwrap();
+        let document = parse("<html><head></head><body><div id=\"test\" data-test-123=\"123\"/></body></html>");
+
+        let node = document.unwrap()[0].clone();
+
+        let result = selector.get_attribute::<u16>(&node);
+
+        match result {
+            Err(HtmlAttributeSelectorError::AttributeNotFound(_)) => {},
+            _ => panic!()
+        }
+    }
+
+    #[test]
+    fn test_get_attribute_conversion_impossible() {
+        let config_yml = r#"
+        div#test:::data-test
+        "#;
+
+        let selector: HtmlAttributeSelector= serde_yml::from_str(config_yml).unwrap();
+        let document = parse("<html><head></head><body><div id=\"test\" data-test=\"asdf\"/></body></html>");
+
+        let node = document.unwrap()[0].clone();
+
+        let result = selector.get_attribute::<f32>(&node);
+
+        match result {
+            Err(HtmlAttributeSelectorError::ConversionError{value: v, target_type: t}) => {},
+            _ => panic!()
+        }
     }
 }
