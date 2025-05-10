@@ -8,7 +8,7 @@ pub use url_path::UrlPath;
 
 use currency::Currency;
 use html_editor::operation::Selector;
-use serde::Deserialize;
+//use serde::Deserialize;
 
 pub struct PaywallConfigV1 {
     paths: Vec<PaywallElement>,
@@ -28,9 +28,9 @@ struct PaywallElement {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    /*use super::*;
 
-    /*#[test]
+    #[test]
     fn test_price_source_hard() {
         let config_yml = r#"
         !Hard $1.25

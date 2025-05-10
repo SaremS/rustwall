@@ -1,5 +1,5 @@
 use html_editor::operation::{Queryable, Selector};
-use html_editor::{parse, Node};
+use html_editor::parse;
 use regex::Regex;
 use serde::{Deserialize, Deserializer};
 
@@ -20,8 +20,7 @@ impl PaywallCondition {
             (PaywallCondition::HasRegexPath(regex), _) => regex.is_match(&url_path.get_path()),
             (PaywallCondition::MatchesCssSelector(selector), HtmlNode(node)) => {
                 node.query(&selector).is_some()
-            }
-            (_, _) => false,
+            } //(_, _) => false,
         }
     }
 }
