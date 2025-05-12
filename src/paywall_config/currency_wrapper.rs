@@ -5,7 +5,7 @@ use std::fmt;
 
 #[derive(Debug)]
 pub struct CurrencyWrapper {
-    currency: Currency,
+    pub currency: Currency,
 }
 
 impl<'de> Deserialize<'de> for CurrencyWrapper {

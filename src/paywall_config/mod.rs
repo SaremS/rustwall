@@ -8,7 +8,7 @@ pub use paywall_condition::PaywallCondition;
 pub use requestable_doc::RequestableDoc;
 pub use url_path::UrlPath;
 
-use crate::utils::HtmlAttributeSelector;
+use crate::utils::{HtmlAttributeSelector, HtmlAttributeSelectorError};
 
 use currency::Currency;
 use html_editor::operation::Selector;
@@ -22,6 +22,25 @@ pub struct PaywallConfigV1 {
 pub enum PriceSource {
     Hard(CurrencyWrapper),
     FromHtmlAttribute(HtmlAttributeSelector),
+}
+
+pub enum PriceSourceExtractError {
+    HtmlAttributeSelectorError(HtmlAttributeSelectorError),
+}
+
+impl PriceSource {
+    pub fn get_price(&self, doc: &RequestableDoc) -> Result<Currency, PriceSourceExtractError> {
+        match (self, doc) {
+            (PriceSource::Hard(CurrencyWrapper { currency }), _) => Ok(currency.clone()),
+            (PriceSource::FromHtmlAttribute(selector), RequestableDoc::HtmlNode(node)) => {
+                let extracted = selector.get_attribute::<Currency>(&node);
+                match extracted {
+                    Ok(currency) => Ok(currency),
+                    Err(error) => Err(PriceSourceExtractError::HtmlAttributeSelectorError(error)),
+                }
+            }
+        }
+    }
 }
 
 pub struct PaywallElement {
