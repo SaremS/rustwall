@@ -1,12 +1,12 @@
+pub mod currency_wrapper;
 pub mod paywall_condition;
 pub mod requestable_doc;
 pub mod url_path;
-pub mod currency_wrapper;
 
+pub use currency_wrapper::CurrencyWrapper;
 pub use paywall_condition::PaywallCondition;
 pub use requestable_doc::RequestableDoc;
 pub use url_path::UrlPath;
-pub use currency_wrapper::CurrencyWrapper;
 
 use crate::utils::HtmlAttributeSelector;
 
@@ -22,11 +22,9 @@ pub struct PaywallConfigV1 {
 pub enum PriceSource {
     Hard(CurrencyWrapper),
     FromHtmlAttribute(HtmlAttributeSelector),
-    FromPaywall,
 }
 
-
-struct PaywallElement {
+pub struct PaywallElement {
     paywall_conditions: Vec<PaywallCondition>,
     price_source: PriceSource,
 }
@@ -42,6 +40,17 @@ mod tests {
         "#;
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
+
+        let currency_config = r#"
+        $1.25
+        "#;
+
+        let currency_wrapper_target: CurrencyWrapper = serde_yml::from_str(config_yml).unwrap();
+
+        match price_source {
+            PriceSource::Hard(c) => assert_eq!(c, currency_wrapper_target),
+            _ => panic!(),
+        }
     }
 
     #[test]
