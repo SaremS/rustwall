@@ -24,9 +24,11 @@ pub enum PriceSource {
     FromHtmlAttribute(HtmlAttributeSelector),
 }
 
+#[derive(Debug)]
 pub enum PriceSourceExtractError {
     HtmlAttributeSelectorError(HtmlAttributeSelectorError),
 }
+
 
 impl PriceSource {
     pub fn get_price(&self, doc: &RequestableDoc) -> Result<Currency, PriceSourceExtractError> {
@@ -51,6 +53,8 @@ pub struct PaywallElement {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use html_editor::parse;
+
 
     #[test]
     fn test_price_source_hard() {
@@ -60,16 +64,13 @@ mod tests {
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
 
-        let currency_config = r#"
-        $1.25
-        "#;
+        let document = parse("<html><head></head><body></body></html>").unwrap()[0].clone();
+        let html_node = RequestableDoc::HtmlNode(document);
 
-        let currency_wrapper_target: CurrencyWrapper = serde_yml::from_str(config_yml).unwrap();
+        let currency_target = price_source.get_price(&html_node).unwrap();
+        let currency_expected = Currency::from_str("$1.25").unwrap();
 
-        match price_source {
-            PriceSource::Hard(c) => assert_eq!(c, currency_wrapper_target),
-            _ => panic!(),
-        }
+        assert_eq!(currency_target, currency_expected);
     }
 
     #[test]
@@ -79,5 +80,13 @@ mod tests {
         "#;
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
+
+        let document = parse("<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>").unwrap()[0].clone();
+        let html_node = RequestableDoc::HtmlNode(document);
+
+        let currency_target = price_source.get_price(&html_node).unwrap();
+        let currency_expected = Currency::from_str("$1.25").unwrap();
+
+        assert_eq!(currency_target, currency_expected);
     }
 }
