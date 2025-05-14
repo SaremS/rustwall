@@ -3,6 +3,21 @@ use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
 
+
+/// Wraps [currency::Currency](https://docs.rs/currency/latest/currency/struct.Currency.html) to enable direct serde_yml deserialization
+/// # Examples
+/// ```
+/// use currency::Currency;
+/// use serde::Deserialize;
+/// let config_yml = r#"
+///     $1.00
+///     "#;
+///
+/// let currency_wrapper_target: CurrencyWrapper = serde_yml::from_str(config_yml).unwrap();
+/// let currency = Currency::from_str("$1.00").unwrap();
+/// let currency_wrapper_expected = CurrencyWrapper { currency: currency };
+/// assert_eq!(currency_wrapper_target, currency_wrapper_expected);
+/// ```
 #[derive(Debug, Clone)]
 pub struct CurrencyWrapper {
     pub currency: Currency,
