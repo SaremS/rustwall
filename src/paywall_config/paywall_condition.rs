@@ -16,6 +16,7 @@ pub enum PaywallCondition {
 }
 
 impl PaywallCondition {
+    /// Check if either [document and/or path](DocumentAndPath) match a paywall condition
     pub fn is_paywalled(&self, url_path: &UrlPath, reqdoc: &RequestableDoc) -> bool {
         match (self, reqdoc) {
             (PaywallCondition::HasRegexPath(regex), _) => regex.is_match(&url_path.get_path()),
