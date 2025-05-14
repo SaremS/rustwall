@@ -6,6 +6,7 @@ use serde::{Deserialize, Deserializer};
 use super::UrlPath;
 use super::{DocumentAndPath, RequestableDoc, RequestableDoc::HtmlNode};
 
+/// Conditions which specify a given [document and path](DocumentAndPath) to be a paywall
 #[derive(Deserialize)]
 pub enum PaywallCondition {
     #[serde(deserialize_with = "deserialize_regex")]
