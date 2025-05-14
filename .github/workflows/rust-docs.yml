@@ -45,10 +45,13 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
+      - name: Add meta
+        run: echo "<meta http-equiv=\"refresh\" content=\"0; url=rustwall\">" > target/doc/index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './target/doc/rustwall'
+          path: './target/doc'
 
       - name: Deploy to GitHub Pages
         id: deployment
