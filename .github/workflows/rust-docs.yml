@@ -8,7 +8,7 @@ on:
       - 'src/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
-      - '.github/workflows/rustdoc.yml' 
+      - '.github/workflows/rust-docs.yml' 
   workflow_dispatch: 
 
 permissions:
@@ -48,7 +48,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './target/doc'
+          path: './target/doc/rustwall'
 
       - name: Deploy to GitHub Pages
         id: deployment
