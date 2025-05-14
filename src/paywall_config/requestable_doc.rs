@@ -58,13 +58,12 @@ mod tests {
         let node: Node = Node::new_element(
             "h1",
             vec![("class", "title")],
-            vec![
-                Node::Text("Hello, world!".to_string()),
-            ]); 
+            vec![Node::Text("Hello, world!".to_string())],
+        );
         let doc = RequestableDoc::HtmlNode(node);
 
         let path_str = "/test/test";
-        
+
         let doc_and_path = DocumentAndPath::new_from_doc_and_path_str(&doc, path_str).unwrap();
     }
 
@@ -73,19 +72,17 @@ mod tests {
         let node: Node = Node::new_element(
             "h1",
             vec![("class", "title")],
-            vec![
-                Node::Text("Hello, world!".to_string()),
-            ]); 
+            vec![Node::Text("Hello, world!".to_string())],
+        );
         let doc = RequestableDoc::HtmlNode(node);
 
         let path_str = "test/test";
-        
+
         let doc_and_path = DocumentAndPath::new_from_doc_and_path_str(&doc, path_str);
 
         match doc_and_path {
             Ok(_) => panic!(),
-            _ => {},
+            _ => {}
         }
     }
-
 }
