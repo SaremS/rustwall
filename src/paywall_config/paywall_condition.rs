@@ -4,7 +4,7 @@ use regex::Regex;
 use serde::{Deserialize, Deserializer};
 
 use super::UrlPath;
-use super::{RequestableDoc, RequestableDoc::HtmlNode};
+use super::{DocumentAndPath, RequestableDoc, RequestableDoc::HtmlNode};
 
 #[derive(Deserialize)]
 pub enum PaywallCondition {
