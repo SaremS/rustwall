@@ -3,7 +3,7 @@ use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CurrencyWrapper {
     pub currency: Currency,
 }

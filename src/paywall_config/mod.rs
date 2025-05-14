@@ -5,8 +5,8 @@ pub mod url_path;
 
 pub use currency_wrapper::CurrencyWrapper;
 pub use paywall_condition::PaywallCondition;
-pub use requestable_doc::RequestableDoc;
-pub use url_path::UrlPath;
+pub use requestable_doc::{DocumentAndPath, RequestableDoc};
+pub use url_path::{UrlPath, UrlPathError};
 
 use crate::utils::{HtmlAttributeSelector, HtmlAttributeSelectorError};
 
@@ -29,7 +29,6 @@ pub enum PriceSourceExtractError {
     HtmlAttributeSelectorError(HtmlAttributeSelectorError),
 }
 
-
 impl PriceSource {
     pub fn get_price(&self, doc: &RequestableDoc) -> Result<Currency, PriceSourceExtractError> {
         match (self, doc) {
@@ -45,16 +44,33 @@ impl PriceSource {
     }
 }
 
+#[derive(Deserialize)]
 pub struct PaywallElement {
     paywall_conditions: Vec<PaywallCondition>,
     price_source: PriceSource,
 }
+
+/*impl PaywallElement {
+    pub fn get_price(&self, doc: &RequestableDoc) -> Option<Currency> {
+        self.paywall_conditions.iter().map(|x| x.is)
+    }
+}*/
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use html_editor::parse;
 
+    #[test]
+    fn test_paywall_element_simple() {
+        let config_yml = r#"
+        paywall_conditions:
+          - !HasRegexPath "^/premium/.*$"
+        price_source: !Hard $1.25
+        "#;
+
+        let condition: PaywallElement = serde_yml::from_str(config_yml).unwrap();
+    }
 
     #[test]
     fn test_price_source_hard() {
@@ -81,7 +97,10 @@ mod tests {
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
 
-        let document = parse("<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>").unwrap()[0].clone();
+        let document =
+            parse("<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>")
+                .unwrap()[0]
+                .clone();
         let html_node = RequestableDoc::HtmlNode(document);
 
         let currency_target = price_source.get_price(&html_node).unwrap();

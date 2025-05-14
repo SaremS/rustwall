@@ -23,8 +23,8 @@ impl UrlPath {
         }
     }
 
-    pub fn get_path(&self) -> String {
-        self.path.clone()
+    pub fn get_path(&self) -> &str {
+        &self.path
     }
 }
 
