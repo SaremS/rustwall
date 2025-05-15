@@ -1,4 +1,4 @@
-use html_editor::Node;
+use html_editor::{parse, Node};
 
 use super::{UrlPath, UrlPathError};
 
@@ -8,11 +8,17 @@ pub struct DocumentAndPath {
     url_path: UrlPath,
 }
 
+#[derive(Debug)]
+pub enum DocumentAndPathError {
+    UrlPathInvalidFormat(String),
+    UrlPathOrHtmlError((Option<String>, Option<String>)),
+}
+
 impl DocumentAndPath {
     pub fn new_from_doc_and_path_str(
         document: &RequestableDoc,
         path: &str,
-    ) -> Result<DocumentAndPath, UrlPathError> {
+    ) -> Result<DocumentAndPath, DocumentAndPathError> {
         let url_path = UrlPath::new(path);
 
         match url_path {
@@ -20,14 +26,36 @@ impl DocumentAndPath {
                 document: document.clone(),
                 url_path: up,
             }),
-            Err(e) => Err(e),
+            Err(UrlPathError::InvalidFormat(e)) => {
+                Err(DocumentAndPathError::UrlPathInvalidFormat(e))
+            }
         }
     }
 
-    /*pub fn new_from_html_and_path_str(
+    pub fn new_from_html_and_path_str(
         html_str: &str,
-        path: &str
-    ) -> Result<DocumentAndPath, */
+        path: &str,
+    ) -> Result<DocumentAndPath, DocumentAndPathError> {
+        let url_path = UrlPath::new(path);
+        let node = parse(html_str);
+
+        match (url_path, node) {
+            (Ok(path), Ok(node)) => Ok(DocumentAndPath {
+                document: RequestableDoc::HtmlNode(node[0].clone()),
+                url_path: path,
+            }),
+            (Err(UrlPathError::InvalidFormat(e)), _) => {
+                Err(DocumentAndPathError::UrlPathOrHtmlError((Some(e), None)))
+            }
+            (Err(UrlPathError::InvalidFormat(e1)), Err(e2)) => Err(
+                DocumentAndPathError::UrlPathOrHtmlError((Some(e1), Some(e2.to_string()))),
+            ),
+            (_, Err(e2)) => Err(DocumentAndPathError::UrlPathOrHtmlError((
+                None,
+                Some(e2.to_string()),
+            ))),
+        }
+    }
 
     pub fn new(document: &RequestableDoc, url_path: &UrlPath) -> DocumentAndPath {
         return DocumentAndPath {
