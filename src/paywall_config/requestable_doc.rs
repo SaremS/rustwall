@@ -44,13 +44,13 @@ impl DocumentAndPath {
                 document: RequestableDoc::HtmlNode(node[0].clone()),
                 url_path: path,
             }),
-            (Err(UrlPathError::InvalidFormat(e)), _) => {
+            (Err(UrlPathError::InvalidFormat(e)), Ok(_)) => {
                 Err(DocumentAndPathError::UrlPathOrHtmlError((Some(e), None)))
             }
             (Err(UrlPathError::InvalidFormat(e1)), Err(e2)) => Err(
                 DocumentAndPathError::UrlPathOrHtmlError((Some(e1), Some(e2.to_string()))),
             ),
-            (_, Err(e2)) => Err(DocumentAndPathError::UrlPathOrHtmlError((
+            (Ok(_), Err(e2)) => Err(DocumentAndPathError::UrlPathOrHtmlError((
                 None,
                 Some(e2.to_string()),
             ))),
@@ -118,4 +118,33 @@ mod tests {
             _ => {}
         }
     }
-}
+
+    #[test]
+    fn test_document_and_path_from_strs_success() {
+        let path = "/test/test";
+        let html = "<html><head></head><body></body></html>";
+
+        let doc_and_path = DocumentAndPath::new_from_html_and_path_str(html, path);
+
+        match doc_and_path {
+            Err(_) => panic!(),
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn test_document_and_path_from_strs_2errs() {
+        let path = "test/test";
+        let html = "<html><head</head><body></body></html>";
+
+        let doc_and_path = DocumentAndPath::new_from_html_and_path_str(html, path);
+
+        match doc_and_path {
+            Ok(_) => panic!(),
+            Err(DocumentAndPathError::UrlPathOrHtmlError((None,None))) => panic!(),
+            Err(DocumentAndPathError::UrlPathOrHtmlError((Some(_), None))) => panic!(),
+            Err(DocumentAndPathError::UrlPathOrHtmlError((None, Some(_)))) => panic!(),
+            _ => {}
+        }
+    }
+}   
