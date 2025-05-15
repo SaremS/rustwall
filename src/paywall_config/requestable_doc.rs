@@ -141,10 +141,10 @@ mod tests {
 
         match doc_and_path {
             Ok(_) => panic!(),
-            Err(DocumentAndPathError::UrlPathOrHtmlError((None,None))) => panic!(),
+            Err(DocumentAndPathError::UrlPathOrHtmlError((None, None))) => panic!(),
             Err(DocumentAndPathError::UrlPathOrHtmlError((Some(_), None))) => panic!(),
             Err(DocumentAndPathError::UrlPathOrHtmlError((None, Some(_)))) => panic!(),
             _ => {}
         }
     }
-}   
+}
