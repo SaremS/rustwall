@@ -24,6 +24,11 @@ impl DocumentAndPath {
         }
     }
 
+    /*pub fn new_from_html_and_path_str(
+        html_str: &str,
+        path: &str
+    ) -> Result<DocumentAndPath, */
+
     pub fn new(document: &RequestableDoc, url_path: &UrlPath) -> DocumentAndPath {
         return DocumentAndPath {
             document: document.clone(),

@@ -17,9 +17,12 @@ pub enum PaywallCondition {
 
 impl PaywallCondition {
     /// Check if either [document and/or path](DocumentAndPath) match a paywall condition
-    pub fn is_paywalled(&self, url_path: &UrlPath, reqdoc: &RequestableDoc) -> bool {
+    pub fn is_paywalled(&self, doc_and_path: &DocumentAndPath) -> bool {
+        let url_path = doc_and_path.get_url_path_as_str();
+        let reqdoc = doc_and_path.get_document();
+
         match (self, reqdoc) {
-            (PaywallCondition::HasRegexPath(regex), _) => regex.is_match(&url_path.get_path()),
+            (PaywallCondition::HasRegexPath(regex), _) => regex.is_match(&url_path),
             (PaywallCondition::MatchesCssSelector(selector), HtmlNode(node)) => {
                 node.query(&selector).is_some()
             } //(_, _) => false,
@@ -55,12 +58,13 @@ mod tests {
 
         let condition: PaywallCondition = serde_yml::from_str(config_yml).unwrap();
 
-        let path = UrlPath::new("/premium/asdf").unwrap();
         let document = parse("<html><head></head><body></body></html>");
-
         let node = HtmlNode(document.unwrap()[0].clone());
 
-        assert!(condition.is_paywalled(&path, &node));
+        let doc_and_path =
+            DocumentAndPath::new_from_doc_and_path_str(&node, "/premium/asdf").unwrap();
+
+        assert!(condition.is_paywalled(&doc_and_path));
     }
 
     #[test]
@@ -71,12 +75,13 @@ mod tests {
 
         let condition: PaywallCondition = serde_yml::from_str(config_yml).unwrap();
 
-        let path = UrlPath::new("/premiu/asdf").unwrap();
         let document = parse("<html><head></head><body></body></html>");
-
         let node = HtmlNode(document.unwrap()[0].clone());
 
-        assert!(!condition.is_paywalled(&path, &node));
+        let doc_and_path =
+            DocumentAndPath::new_from_doc_and_path_str(&node, "/premiu/asdf").unwrap();
+
+        assert!(!condition.is_paywalled(&doc_and_path));
     }
 
     #[test]
@@ -87,12 +92,13 @@ mod tests {
 
         let condition: PaywallCondition = serde_yml::from_str(config_yml).unwrap();
 
-        let path = UrlPath::new("/premiu/asdf").unwrap();
         let document = parse("<html><head></head><body></body></html>");
-
         let node = HtmlNode(document.unwrap()[0].clone());
 
-        assert!(condition.is_paywalled(&path, &node));
+        let doc_and_path =
+            DocumentAndPath::new_from_doc_and_path_str(&node, "/premiu/asdf").unwrap();
+
+        assert!(condition.is_paywalled(&doc_and_path));
     }
 
     #[test]
@@ -103,11 +109,12 @@ mod tests {
 
         let condition: PaywallCondition = serde_yml::from_str(config_yml).unwrap();
 
-        let path = UrlPath::new("/premiu/asdf").unwrap();
         let document = parse("<html><head></head><body></body></html>");
-
         let node = HtmlNode(document.unwrap()[0].clone());
 
-        assert!(!condition.is_paywalled(&path, &node));
+        let doc_and_path =
+            DocumentAndPath::new_from_doc_and_path_str(&node, "/premiu/asdf").unwrap();
+
+        assert!(!condition.is_paywalled(&doc_and_path));
     }
 }

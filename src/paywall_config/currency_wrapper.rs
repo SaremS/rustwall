@@ -3,7 +3,6 @@ use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
 
-
 /// Wraps [currency::Currency](https://docs.rs/currency/latest/currency/struct.Currency.html) to enable direct serde_yml deserialization
 /// # Examples
 /// ```
