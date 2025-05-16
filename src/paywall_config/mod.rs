@@ -10,6 +10,7 @@ pub use url_path::{UrlPath, UrlPathError};
 
 use crate::utils::{HtmlAttributeSelector, HtmlAttributeSelectorError};
 
+use std::fmt;
 use currency::Currency;
 use html_editor::operation::Selector;
 use serde::Deserialize;
@@ -29,8 +30,23 @@ pub enum PriceSourceExtractError {
     HtmlAttributeSelectorError(HtmlAttributeSelectorError),
 }
 
+impl fmt::Display for PriceSourceExtractError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PriceSourceExtractError::HtmlAttributeSelectorError(err) => {
+                write!(f, "HtmlAttributeSelectorError: {}", err)
+            }
+        }
+    }
+}
+
 impl PriceSource {
-    pub fn get_price(&self, doc: &RequestableDoc) -> Result<Currency, PriceSourceExtractError> {
+    pub fn get_price(
+        &self,
+        doc_and_path: &DocumentAndPath,
+    ) -> Result<Currency, PriceSourceExtractError> {
+        let doc = doc_and_path.get_document();
+
         match (self, doc) {
             (PriceSource::Hard(CurrencyWrapper { currency }), _) => Ok(currency.clone()),
             (PriceSource::FromHtmlAttribute(selector), RequestableDoc::HtmlNode(node)) => {
@@ -50,11 +66,42 @@ pub struct PaywallElement {
     price_source: PriceSource,
 }
 
-/*impl PaywallElement {
-    pub fn get_price(&self, doc: &RequestableDoc) -> Option<Currency> {
-        self.paywall_conditions.iter().map(|x| x.is)
+pub enum PaywallPriceOption {
+    Price(Currency),
+    ConditionsNotMet,
+    PriceParsingError(String)
+}
+
+impl PaywallPriceOption {
+    pub fn unwrap(&self) -> Currency {
+        match self {
+            PaywallPriceOption::Price(p) => p.clone(),
+            PaywallPriceOption::ConditionsNotMet => panic!("PaywallPriceOption .unwrap() to Currency but variant is ConditionsNotMet"),
+            PaywallPriceOption::PriceParsingError(_) => panic!("PaywallPriceOption .unwrap() to Currency but variant is PriceParsingError"),
+        } 
     }
-}*/
+}
+
+impl PaywallElement {
+    pub fn get_price(&self, doc_and_path: &DocumentAndPath) -> PaywallPriceOption {
+        let is_paywalled = self
+            .paywall_conditions
+            .iter()
+            .map(|x| x.is_paywalled(doc_and_path))
+            .all(|r| r);
+
+        if !is_paywalled {
+            return PaywallPriceOption::ConditionsNotMet;
+        }
+
+        let price = self.price_source.get_price(doc_and_path);
+
+        match price {
+            Ok(p) => PaywallPriceOption::Price(p),
+            Err(e) => PaywallPriceOption::PriceParsingError(e.to_string()),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -69,7 +116,18 @@ mod tests {
         price_source: !Hard $1.25
         "#;
 
-        let condition: PaywallElement = serde_yml::from_str(config_yml).unwrap();
+        let element: PaywallElement = serde_yml::from_str(config_yml).unwrap();
+
+        let doc_and_path = DocumentAndPath::new_from_html_and_path_str(
+            "<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>",
+            "/premium/test",
+        )
+        .unwrap();
+
+        let currency_target = element.get_price(&doc_and_path).unwrap();
+        let currency_expected = Currency::from_str("$1.25").unwrap();
+
+        assert_eq!(currency_target, currency_expected);
     }
 
     #[test]
@@ -80,10 +138,13 @@ mod tests {
 
         let price_source: PriceSource = serde_yml::from_str(config_yml).unwrap();
 
-        let document = parse("<html><head></head><body></body></html>").unwrap()[0].clone();
-        let html_node = RequestableDoc::HtmlNode(document);
+        let doc_and_path = DocumentAndPath::new_from_html_and_path_str(
+            "<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>",
+            "/test/test",
+        )
+        .unwrap();
 
-        let currency_target = price_source.get_price(&html_node).unwrap();
+        let currency_target = price_source.get_price(&doc_and_path).unwrap();
         let currency_expected = Currency::from_str("$1.25").unwrap();
 
         assert_eq!(currency_target, currency_expected);
@@ -101,9 +162,14 @@ mod tests {
             parse("<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>")
                 .unwrap()[0]
                 .clone();
-        let html_node = RequestableDoc::HtmlNode(document);
 
-        let currency_target = price_source.get_price(&html_node).unwrap();
+        let doc_and_path = DocumentAndPath::new_from_html_and_path_str(
+            "<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>",
+            "/test/test",
+        )
+        .unwrap();
+
+        let currency_target = price_source.get_price(&doc_and_path).unwrap();
         let currency_expected = Currency::from_str("$1.25").unwrap();
 
         assert_eq!(currency_target, currency_expected);
