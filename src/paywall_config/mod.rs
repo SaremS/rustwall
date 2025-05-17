@@ -1,14 +1,13 @@
 pub mod currency_wrapper;
 pub mod paywall_condition;
-pub mod requestable_doc;
-pub mod url_path;
 
 pub use currency_wrapper::CurrencyWrapper;
 pub use paywall_condition::PaywallCondition;
-pub use requestable_doc::{DocumentAndPath, RequestableDoc};
-pub use url_path::{UrlPath, UrlPathError};
 
-use crate::utils::{HtmlAttributeSelector, HtmlAttributeSelectorError};
+use crate::utils::{
+    HtmlAttributeSelector, HtmlAttributeSelectorError
+};
+use crate::documents::{DocumentAndPath, RequestableDoc};
 
 use std::fmt;
 use currency::Currency;
@@ -109,11 +108,33 @@ mod tests {
     use html_editor::parse;
 
     #[test]
-    fn test_paywall_element_simple() {
+    fn test_paywall_element_hard() {
         let config_yml = r#"
         paywall_conditions:
           - !HasRegexPath "^/premium/.*$"
         price_source: !Hard $1.25
+        "#;
+
+        let element: PaywallElement = serde_yml::from_str(config_yml).unwrap();
+
+        let doc_and_path = DocumentAndPath::new_from_html_and_path_str(
+            "<html><head></head><body><div id=test data-price=\"$1.25\"/></body></html>",
+            "/premium/test",
+        )
+        .unwrap();
+
+        let currency_target = element.get_price(&doc_and_path).unwrap();
+        let currency_expected = Currency::from_str("$1.25").unwrap();
+
+        assert_eq!(currency_target, currency_expected);
+    }
+
+    #[test]
+    fn test_paywall_element_attribute() {
+        let config_yml = r#"
+        paywall_conditions:
+          - !HasRegexPath "^/premium/.*$"
+        price_source: !FromHtmlAttribute div#test:::data-price
         "#;
 
         let element: PaywallElement = serde_yml::from_str(config_yml).unwrap();

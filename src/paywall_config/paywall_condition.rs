@@ -3,8 +3,7 @@ use html_editor::parse;
 use regex::Regex;
 use serde::{Deserialize, Deserializer};
 
-use super::UrlPath;
-use super::{DocumentAndPath, RequestableDoc, RequestableDoc::HtmlNode};
+use crate::documents::{UrlPath, DocumentAndPath, RequestableDoc, RequestableDoc::HtmlNode};
 
 /// Conditions which specify a given [document and path](DocumentAndPath) to be a paywall
 #[derive(Deserialize)]
